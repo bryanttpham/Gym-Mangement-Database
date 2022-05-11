@@ -1,16 +1,17 @@
 import logo from './logo.svg';
 import React, {useState,useEffect} from "react"
 import './App.css';
+import DynamicTable from "./components/DynamicTable"
 const Axios = require("axios")
 
-
-function App() {
+  function App() {
   const [usernameLog,setUsername] = useState("")
   const [passwordLog,setPassword]= useState("")
-  const [userInfo,setUserinfo] = useState("")
-  const [userData,setUserdata] = useState("")
-  const [loginStatus,setloginStatus]= useState("")
-  const [ptsession,setpt]= useState([])
+  const [userInfo,setUserinfo] = useState([])
+  const [ptsession,setPt]= useState([])
+  const[workout, setWorkouts]= useState([])
+  const [loginStatus,setLogin]=useState(false)
+  const [userType,setUserType] = useState("Please Log In")
 
 
   const TableData=[
@@ -21,74 +22,158 @@ function App() {
     {id:5, fullName:"Kajol Kumari", age: 21, city: "Chennai"}
 ]
 
+//Takes user type
+//Gets profile Information
+const getMember= (memberid) =>{
+  Axios.post("http://localhost:3001/member",{
+    member:memberid
+  })
+  .then((response)=>{
+    //console.log(response)
+       setUserinfo(response.data);
+        })
+}
+
+const getInstructor= (instructorid) =>{
+  Axios.post("http://localhost:3001/instructor",{
+    instructor:instructorid
+  })
+  .then((response)=>{
+    //console.log(response)
+       setUserinfo(response.data);
+        })
+}
+
+
+const getPt= (memberid) =>{
+  Axios.post("http://localhost:3001/member/pt/id",{
+    member:memberid
+  })
+  .then((response)=>{
+    console.log(response.data)
+      setPt(response.data)
+      
+
+      //setUserdata(response.data[0])
+    })
+}
+
+
+const getWorkouts= (memberid) =>{
+  Axios.post("http://localhost:3001/member/workout/id",{
+    member:memberid
+  })
+  .then((response)=>{
+    console.log(response.data)
+      setWorkouts(response.data)      
+
+      //setUserdata(response.data[0])
+    })
+}
+
+
+const getInstructorPt= (instructorid) =>{
+  Axios.post("http://localhost:3001/instructor/pt/id",{
+    instructor:instructorid
+  })
+  .then((response)=>{
+    console.log(response.data)
+      setPt(response.data)
+      
+
+      //setUserdata(response.data[0])
+    })
+}
+
+
+const getInstructorWorkouts= (instructorid) =>{
+  Axios.post("http://localhost:3001/instructor/workout/id",{
+    instructor:instructorid
+  })
+  .then((response)=>{
+    console.log(response.data)
+      setWorkouts(response.data)      
+
+      //setUserdata(response.data[0])
+    })
+}
+
+
   //Checks user credential and user type
-  const login = () =>{
-    Axios.post("http://localhost:3001/login",{
+  const login = async () =>{
+
+    const user=await Axios.post("http://localhost:3001/login",{
       username:usernameLog,
       password:passwordLog,
     })
     .then((response)=>{
       
+      console.log(response.data[0])
+        return response.data[0];
 
-      console.log(response.data)
-
-      if(response.data[0])
-      {
-      setUserinfo(response.data[0])
-      
-      setloginStatus("True")
-      }
     })
     
-  }
-
-//Takes user type
-//Gets profile Information
-  const getUser= () =>{
-    Axios.post("http://localhost:3001/member",{
-      member:userInfo.member
-    })
-    .then((response)=>{
-        console.log(response.data[0])
-        setUserdata(response.data[0])
-      })
-  }
-
-
-  const getPt= () =>{
-    Axios.post("http://localhost:3001/member/pt",{
-      member:userInfo.member
-    })
-    .then((response)=>{
-        console.log(response.data[0])
-        
-
-        setUserdata(response.data[0])
-      })
-  }
-
-
-  const getWorkouts= () =>{
-    Axios.post("http://localhost:3001/member/pt",{
-      member:userInfo.member
-    })
-    .then((response)=>{
-        console.log(response.data[0])
-        
-
-        setUserdata(response.data[0])
-      })
-  }
-  useEffect(()=>{
-    if(loginStatus=="True")
+    if(user.member)
     {
-      getUser();
+      await getMember(user.member)
+      await getPt(user.member)
+      await getWorkouts(user.member)
+      setLogin(true)
+      setUserType("Member")
+    }
+    else
+    {
+      await getInstructor(user.instructor)
+      await getInstructorPt(user.instructor)
+      await getInstructorWorkouts(user.instructor)
+      setLogin(true)
+      setUserType("Instructor")
+
     }
 
-    console.log(userData)
-  })
+
+
+    // const print = (test) =>
+    // {
+    //   console.log(test)
+    // }
+    
+    console.log(user)
+  }
+   
+  function AccountTable(props)
+  {
+    const isLoggedIn = props.isLoggedIn;
+    if(isLoggedIn)
+    {
+      return <DynamicTable userData={userInfo}/>
+    }
+  }
+  
+  function PtTable(props)
+  {
+    const isLoggedIn = props.isLoggedIn;
+    if(isLoggedIn)
+    {
+      return <DynamicTable userData={ptsession} />
+    }
+  }
+
+  function WorkoutTable(props)
+  {
+    const isLoggedIn = props.isLoggedIn;
+    if(isLoggedIn)
+    {
+      return <DynamicTable userData={workout} />
+    }
+  }
+
+  
+
   return (
     <div className="App">
+          <h1>{userType}</h1>
+
       <div className="login" >
         <h1>Login</h1>
         <label>Username</label>
@@ -114,116 +199,29 @@ function App() {
       height: '25vh',
     }}>
             <h1>Account Info</h1>
-        <table>
-          <thead>
-            <th>ID Number</th>
-            <th>Name</th>
-            <th>Address</th>
-            <th>Age</th>
-            <th>Gender</th>
-            <th>Phone Number</th>
-            <th>Join Date</th>
-            <th>Expiration Date</th>
-            <th>Email</th>
-          </thead>
-          <tbody>
-              <td> {userData.id_number}</td>
-              <td>{userData.name} </td>
-              <td>{userData.address} </td>
-              <td>{userData.age}</td>
-              <td>{userData.gender}</td>
-              <td>{userData.phone_number} </td>
-              <td>{userData.join_date}</td>
-              <td>{userData.expiration_date}</td>
-              <td>{userData.email}</td>
-          </tbody>
-        </table>
+            <AccountTable isLoggedIn={loginStatus} />
+
       </div>
 
-
-      <div className = "pt" style={{
+      <div className = "session" style={{
       display: 'grid',
       justifyContent: 'center',
       height: '25vh',
     }}>
-      <h1>PT Sessions</h1>
-        <table>
-          <thead>
-            <th>Session Id</th>
-            <th>Day</th>
-            <th>Start Time</th>
-            <th>End Time</th>
-            <th>Training Notes</th>
-            <th>Instructor</th>
-          </thead>
-          <tbody>
-              <td>S1</td>
-              <td> Monday</td>
-              <td>5:45 PM</td>
-              <td>6:45 PM</td>
-              <td>First day was very hard</td>
-              <td>John Doe </td>
-          </tbody>
-          <tbody>
-              <td>S1</td>
-              <td> Wednesday</td>
-              <td>5:45 PM</td>
-              <td>6:45 PM</td>
-              <td>Second day was hard but getting better </td>
-              <td>John Doe </td>
-          </tbody>
-          <tbody>
-              <td>S1</td>
-              <td> Friday</td>
-              <td>5:45 PM</td>
-              <td>6:45 PM</td>
-              <td> </td>
-              <td>John Doe </td>
-          </tbody>
-        </table>
+        <h1>Session Info</h1>
+        <PtTable isLoggedIn={loginStatus} />
       </div>
+
       <div className = "workout" style={{
       display: 'grid',
       justifyContent: 'center',
       height: '25vh',
     }}>
-      <h1>Workout Sessions</h1>
-        <table>
-          <thead>
-            <th>Session Id</th>
-            <th>Workout Date</th>
-            <th>Room Number</th>
-            <th>Workout Course</th>
-            <th>Instructor</th>
-            <th>Start Time</th>
-            <th>End Time</th>
-          </thead>
-          <tbody>
-              <td>S1</td>
-              <td> Monday</td>
-              <td>5:45 PM</td>
-              <td>6:45 PM</td>
-              <td>First day was very hard</td>
-              <td>John Doe </td>
-          </tbody>
-          <tbody>
-              <td>S1</td>
-              <td> Wednesday</td>
-              <td>5:45 PM</td>
-              <td>6:45 PM</td>
-              <td>Second day was hard but getting better </td>
-              <td>John Doe </td>
-          </tbody>
-          <tbody>
-              <td>S1</td>
-              <td> Friday</td>
-              <td>5:45 PM</td>
-              <td>6:45 PM</td>
-              <td> </td>
-              <td>John Doe </td>
-          </tbody>
-        </table>
+        <h1>Workout Info</h1>
+        <WorkoutTable isLoggedIn={loginStatus} />
       </div>
+
+
     </div>
 
   );
