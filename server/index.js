@@ -9,12 +9,21 @@ const app = express();
 app.use(express.json())
 app.use(cors())
  
-const db = mysql.createConnection({
-    user:"root",
-    host:"localhost",
-    password:"gym1234",
-    database:"gym"
-});
+// const db = mysql.createConnection({
+//     user:"root",
+//     host:"localhost",
+//     password:"gym1234",
+//     database:"gym"
+// });
+
+const db=mysql.createConnection({
+    HOST: "us-cdbr-iron-east-02.cleardb.net",
+  USER: "b3adab6eff4fce",
+  PASSWORD: "da6e0837",
+  DB: "heroku_9548b86f0076b62"
+})
+
+
 db.connect((err)=>{
     if(err)
     {
